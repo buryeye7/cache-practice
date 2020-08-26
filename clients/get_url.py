@@ -17,6 +17,8 @@ def get_page(page):
         print("os exception occured ", ose)
     except URLError as urle:
         print("url exception occured ", urle)
+    finally:
+        url.close()
 
 if __name__ == "__main__":
     start_page = int(sys.argv[1])
