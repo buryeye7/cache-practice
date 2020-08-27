@@ -1,5 +1,6 @@
 import MySQLdb
 import urllib
+import urllib.parse
 import sys
 import os
 import redis
@@ -22,7 +23,7 @@ USERNAME = 'admin'
 PASSWORD = 'default'
 
 app = Flask(__name__)
-app.config.from_object(__name__)
+#app.config.from_object(__name__)
 metrics = PrometheusMetrics(app)
 metrics.info('app_info', 'Application info', version='1.0.3')
 
@@ -48,7 +49,7 @@ def ChangeHex(n):
         c = "f"
 
     if (n - x != 0):
-        return ChangeHex(n / 16) + str(c)
+        return ChangeHex(n // 16) + str(c)
     else:
         return str(c)
 
@@ -61,8 +62,10 @@ def show_entries():
 @app.route('/<short_url>')
 def redirect_real_url(short_url):
     try:
-        value = get_realurl( short_url )
-        return redirect(value)
+        print(short_url)
+        value = get_realurl(short_url)
+        return value
+        #return redirect(value)
     except Exception as inst:
         return str(inst)
 
@@ -80,13 +83,15 @@ def save_short_url( cursor, short_url, real_url ):
     cursor.execute( "update tbl_shorturl set short_url='%s' where real_url='%s'"%( short_url, real_url ) )
 
 def create_short_url(cursor, url):
-    real_url = urllib.quote(url.encode('utf8'), '/:')
+    real_url = urllib.parse.quote(url.encode('utf8'), '/:')
     try:
         count = get_count(cursor, real_url)
+        print('count ', count)
     except:
         raise Exception("Error: Duplicate url: %s"%url)
 
     short_url = create_short_url_data( 0, count )
+    print('short_url', short_url)
     save_short_url( cursor, short_url, real_url )
     return short_url
 
@@ -120,9 +125,13 @@ def create_shorturl(url):
     return "http://%s/%s"%(domain, short_url)
 
 def get_realurl(short_url):
+    print('short_url', short_url)
+    short_url = "%02x%s"%(0, ChangeHex(int(short_url)))
+    print('short_url', short_url)
     g_cursor.execute( "select real_url from tbl_shorturl where short_url='%s'"%(short_url) )
-    if( g_cursor.arraysize > 0 ):
-        value = g_cursor.fetchone()[0]
+    value = g_cursor.fetchone()[0]
+    if value != None:
+        print('value ', value)
     else:
         raise Exception("Error: No url exists")
 

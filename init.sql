@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS shorturl;
 USE shorturl;
 
-CREATE TABLE tbl_shorturl
+CREATE TABLE IF NOT EXISTS tbl_shorturl
 (
     uid INT PRIMARY KEY AUTO_INCREMENT,
     real_url VARCHAR(255) UNIQUE,
